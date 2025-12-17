@@ -1,1 +1,1 @@
-from . import import_input_wizard
+from . import import_payroll_input_wizard
