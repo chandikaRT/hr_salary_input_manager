@@ -11,8 +11,8 @@
     "depends": ["hr", "hr_payroll", "base", "board"],
     "data": [
         'security/ir.model.access.csv',
-        'views/payroll_input_sheet_views.xml',
-        'views/import_wizard_views.xml',
+        'views/payroll_input_sheet_view.xml',
+        'views/import_wizard_view.xml',
     ],
     "installable": True,
     "application": True,
