@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_salary_input,access_hr_salary_input,model_hr_salary_input,,1,1,1,1
+access_hr_salary_input_audit,access_hr_salary_input_audit,model_hr_salary_input_audit,,1,0,0,0
+access_hr_salary_input_wizard,access_hr_salary_input_wizard,model_hr_salary_input_upload_wizard,,1,1,1,1

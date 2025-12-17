@@ -1,0 +1,6 @@
+<odoo>
+    <record id="group_hr_salary_input_manager" model="res.groups">
+        <field name="name">HR Salary Input Manager</field>
+        <field name="category_id" ref="base.module_category_human_resources"/>
+    </record>
+</odoo>
