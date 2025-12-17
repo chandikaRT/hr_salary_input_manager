@@ -1,0 +1,33 @@
+<odoo>
+  <record id="view_import_payroll_input_wizard_form" model="ir.ui.view">
+    <field name="name">hr.payroll.input.import.wizard.form</field>
+    <field name="model">hr.payroll.input.import.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Import Payroll Input Sheet">
+        <sheet>
+          <group>
+            <field name="file" filename="filename"/>
+            <field name="filename"/>
+            <field name="month"/>
+            <field name="year"/>
+            <field name="sheet_ref"/>
+          </group>
+          <footer>
+            <button string="Import" type="object" name="action_import" class="btn-primary"/>
+            <button string="Apply to Payslips" type="object" name="action_create_inputs"/>
+            <button string="Cancel" class="btn-secondary" special="cancel"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_import_payroll_input_wizard" model="ir.actions.act_window">
+    <field name="name">Import Payroll Inputs</field>
+    <field name="res_model">hr.payroll.input.import.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <menuitem id="menu_payroll_input_import" name="Import Inputs" parent="hr_work_entry_contract_enterprise.menu_hr_payroll_root" action="action_import_payroll_input_wizard"/>
+</odoo>
