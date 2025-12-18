@@ -6,13 +6,28 @@ class PayrollInputSheetLine(models.Model):
 
     sheet_id = fields.Many2one(
         'hr.payroll.input.sheet',
-        ondelete='cascade'
+        string='Sheet',
+        ondelete='cascade',
+        required=True
     )
+
     employee_id = fields.Many2one(
         'hr.employee',
         string='Employee',
         required=True
     )
-    input_name = fields.Char(string='Input Name', required=True)
-    amount = fields.Float(string='Amount', required=True)
-    applied = fields.Boolean(string='Applied', default=False)
+
+    input_name = fields.Char(
+        string='Input Name',
+        required=True
+    )
+
+    amount = fields.Float(
+        string='Amount',
+        required=True
+    )
+
+    applied = fields.Boolean(
+        string='Applied',
+        default=False
+    )

@@ -6,24 +6,16 @@ class PayrollInputSheet(models.Model):
     _name = 'hr.payroll.input.sheet'
     _description = 'Payroll Input Sheet'
 
-    name = fields.Char(
-        string='Reference',
-        required=True,
-        default=lambda self: 'New'
-    )
+    name = fields.Char(string='Reference', required=True, default='New')
     month = fields.Selection(
         [(str(i), str(i)) for i in range(1, 13)],
-        string='Month',
         required=True
     )
-    year = fields.Integer(string='Year', required=True)
+    year = fields.Integer(required=True)
     state = fields.Selection(
         [('draft', 'Draft'), ('done', 'Done')],
         default='draft'
     )
-
-    file = fields.Binary(string='Excel File')
-    filename = fields.Char(string='Filename')
 
     line_ids = fields.One2many(
         'hr.payroll.input.sheet.line',
