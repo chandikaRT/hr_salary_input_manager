@@ -29,10 +29,10 @@ class PayrollInputSheet(models.Model):
     def action_import_excel(self):
         self.ensure_one()
 
-        if not self.file:
+        if not self.import_file:
             return
 
-        data = base64.b64decode(self.file)
+        data = base64.b64decode(self.import_file)
         workbook = xlrd.open_workbook(file_contents=data)
         sheet = workbook.sheet_by_index(0)
 
@@ -57,8 +57,8 @@ class PayrollInputSheet(models.Model):
                 'amount': amount,
             })
 
-        self.file = False
-        self.filename = False
+        self.import_file = False
+        self.import_filename = False
 
     # ------------------------------------------------------
     # Apply to Payslips
