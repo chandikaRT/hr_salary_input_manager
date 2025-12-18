@@ -1,42 +1,104 @@
 from odoo import models, fields, api
+import base64
+import xlrd
 
 class PayrollInputSheet(models.Model):
     _name = 'hr.payroll.input.sheet'
     _description = 'Payroll Input Sheet'
 
-    name = fields.Char('Description', compute='_compute_name')
-    date = fields.Date(string='Date', required=True)
-    state = fields.Selection([('draft', 'Draft'), ('done', 'Done')], default='draft')
-    line_ids = fields.One2many('hr.payroll.input.sheet.line', 'sheet_id', string='Lines')
+    name = fields.Char(
+        string='Reference',
+        required=True,
+        default=lambda self: 'New'
+    )
+    month = fields.Selection(
+        [(str(i), str(i)) for i in range(1, 13)],
+        string='Month',
+        required=True
+    )
+    year = fields.Integer(string='Year', required=True)
+    state = fields.Selection(
+        [('draft', 'Draft'), ('done', 'Done')],
+        default='draft'
+    )
 
-    def _compute_name(self):
-        for rec in self:
-            rec.name = f"Payroll Inputs {rec.date.strftime('%B %Y')}"
+    file = fields.Binary(string='Excel File')
+    filename = fields.Char(string='Filename')
 
+    line_ids = fields.One2many(
+        'hr.payroll.input.sheet.line',
+        'sheet_id',
+        string='Lines'
+    )
+
+    # ------------------------------------------------------
+    # Excel Import
+    # ------------------------------------------------------
+    def action_import_excel(self):
+        self.ensure_one()
+
+        if not self.file:
+            return
+
+        data = base64.b64decode(self.file)
+        workbook = xlrd.open_workbook(file_contents=data)
+        sheet = workbook.sheet_by_index(0)
+
+        # Expected headers:
+        # Employee Code | Input Name | Amount
+        for row in range(1, sheet.nrows):
+            emp_code = str(sheet.cell(row, 0).value).strip()
+            input_name = str(sheet.cell(row, 1).value).strip()
+            amount = float(sheet.cell(row, 2).value or 0.0)
+
+            employee = self.env['hr.employee'].search(
+                [('barcode', '=', emp_code)],
+                limit=1
+            )
+            if not employee:
+                continue
+
+            self.env['hr.payroll.input.sheet.line'].create({
+                'sheet_id': self.id,
+                'employee_id': employee.id,
+                'input_name': input_name,
+                'amount': amount,
+            })
+
+        self.file = False
+        self.filename = False
+
+    # ------------------------------------------------------
+    # Apply to Payslips
+    # ------------------------------------------------------
     def action_apply_to_payslips(self):
-        for line in self.line_ids:
-            input_type = self.env['hr.salary.input'].search([('name', '=', line.input_name)], limit=1)
-            if not input_type:
-                input_type = self.env['hr.salary.input'].create({'name': line.input_name})
-            payslips = self.env['hr.payslip'].search([
-                ('employee_id', '=', line.employee_id.id),
-                ('date_from', '>=', self.date.replace(day=1)),
-                ('date_to', '<=', self.date.replace(day=1) + relativedelta(months=1, days=-1)),
-            ])
-            for slip in payslips:
-                self.env['hr.payslip.input'].create({
-                    'name': input_type.name,
-                    'amount': line.amount,
-                    'slip_id': slip.id,
-                    'code': input_type.code,
-                })
+        for sheet in self:
+            for line in sheet.line_ids.filtered(lambda l: not l.applied):
 
-class PayrollInputSheetLine(models.Model):
-    _name = 'hr.payroll.input.sheet.line'
-    _description = 'Payroll Input Sheet Line'
+                input_type = self.env['hr.salary.input'].search(
+                    [('name', '=', line.input_name)],
+                    limit=1
+                )
+                if not input_type:
+                    input_type = self.env['hr.salary.input'].create({
+                        'name': line.input_name,
+                        'code': line.input_name.replace(' ', '_').upper(),
+                    })
 
-    sheet_id = fields.Many2one('hr.payroll.input.sheet', string='Sheet')
-    employee_id = fields.Many2one('hr.employee', string='Employee', required=True)
-    input_name = fields.Char('Input Name', required=True)
-    amount = fields.Float('Amount', required=True)
-    applied = fields.Boolean('Applied', default=False)
+                payslips = self.env['hr.payslip'].search([
+                    ('employee_id', '=', line.employee_id.id),
+                    ('state', '=', 'draft'),
+                ])
+
+                for slip in payslips:
+                    self.env['hr.payslip.input'].create({
+                        'slip_id': slip.id,
+                        'input_type_id': input_type.id,
+                        'amount': line.amount,
+                        'name': input_type.name,
+                        'code': input_type.code,
+                    })
+
+                line.applied = True
+
+            sheet.state = 'done'

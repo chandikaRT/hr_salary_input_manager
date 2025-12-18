@@ -12,7 +12,6 @@
     "data": [
         'security/ir.model.access.csv',
         'views/payroll_input_sheet_view.xml',
-        'views/import_wizard_view.xml',
     ],
     "installable": True,
     "application": True,
